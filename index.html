@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SATE - Sistema de Aplicação de Testes Eletrônicos</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-box">
+            <div class="logo" style="justify-content: center; margin-bottom: 30px;">
+                <img src="https://yt3.googleusercontent.com/ytc/AIdro_kmh6DS831WIyiTmCHlskXhI6jiw_KzMke4WIzVjEoOPQ=s900-c-k-c0x00ffffff-no-rj" alt="Cebraspe" class="logo-cebraspe">
+                <span class="logo-text">Cebraspe</span>
+            </div>
+            <h2>Avaliação de Desempenho 2026</h2>
+            <p>Sistema de Aplicação de Testes Eletrônicos</p>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="studentName">Nome do Estudante:</label>
+                    <input type="text" id="studentName" required placeholder="Digite seu nome completo">
+                </div>
+                <button type="submit" class="login-btn">Iniciar Avaliação</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Exam Screen -->
+    <div id="examScreen" class="hidden">
+        <div class="header">SATE: Sistema de Aplicação de Testes Eletrônicos</div>
+        
+        <div class="top-bar">
+            <div class="logo">
+                                <img src="https://yt3.googleusercontent.com/ytc/AIdro_kmh6DS831WIyiTmCHlskXhI6jiw_KzMke4WIzVjEoOPQ=s900-c-k-c0x00ffffff-no-rj" alt="Cebraspe" class="logo-cebraspe">
+
+                <span class="logo-text">Cebraspe</span>
+            </div>
+            <div style="text-align: right;">
+                <div style="color: #3b5998; font-weight: bold; font-size: 12px;">
+                    <span id="studentNameDisplay"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="title-section">
+            <h1>Avaliação de Desempenho de Estudante 2026 - 2ª Etapa</h1>
+            <p id="studentInfo"></p>
+        </div>
+
+        <div class="subject-bar">Desenvolvimento de Sistemas</div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="timer">Tempo: <span id="timer">2:00:00</span></div>
+                
+                <div class="summary">
+                    <div class="summary-item">
+                        <div class="summary-icon icon-answered"><span id="answeredCount">0</span></div>
+                        <span>Questões respondidas</span>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-icon icon-blank"><span id="blankCount">40</span></div>
+                        <span>Questões em branco</span>
+                    </div>
+                </div>
+
+                <div class="question-grid-label">QUESTÕES DA PROVA ▶</div>
+                <div class="question-grid" id="questionGrid"></div>
+            </div>
+
+            <div class="content-area">
+                <div class="question-header">
+                    Questão <span id="currentQuestionNumber">1</span> - Desenvolvimento de Sistemas
+                </div>
+                
+                <div class="question-text" id="questionText"></div>
+                
+                <div class="options" id="optionsContainer"></div>
+
+                <div class="navigation-buttons">
+                    <button class="nav-btn" id="prevBtn" onclick="previousQuestion()">◀ Anterior</button>
+                    <button class="nav-btn" id="nextBtn" onclick="nextQuestion()">Próxima ▶</button>
+                    <button class="submit-btn" id="finishBtn" onclick="finishExam()" style="margin-left: auto; margin-top: 0;">Finalizar Prova</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Screen -->
+    <div id="resultsScreen" class="hidden results-screen">
+        <h2>Avaliação Finalizada!</h2>
+        <div class="score">
+            <span id="finalScore">0</span> / <span id="totalQuestions">40</span>
+        </div>
+        <p style="text-align: center; color: #666; margin-bottom: 30px;">
+            Parabéns, <strong id="finalStudentName"></strong>!<br>
+            Você completou a avaliação.
+        </p>
+        <div class="results-details" id="resultsDetails"></div>
+    </div>
+
+    <script>
+        // Dados da prova
+        let studentData = {
+            name: '',
+            id: ''
+        };
+
+        let currentQuestion = 0;
+        let answers = {};
+        let timeRemaining = 2 * 60 * 60; // 2 horas em segundos
+
+        const questions = [
+            {
+                id: 1,
+                text: "Um sistema ainda em estágio de desenvolvimento apresentou alguns erros nas etapas de teste a que foi submetido. Foi decido que será lançada uma versão antes do lançamento definitivo do sistema, que será usada por outros desenvolvedores e parceiros do projeto. Qual deve ser o nome dado a versão desse software?",
+                options: [
+                    { letter: 'a', text: 'Alfa' },
+                    { letter: 'b', text: 'Beta' },
+                    { letter: 'c', text: 'Gold' },
+                    { letter: 'd', text: 'Open Beta' },
+                    { letter: 'e', text: 'Release Candidate' }
+                ],
+                correctAnswer: 'e'
+            },
+            {
+                id: 2,
+                text: "Qual é o principal objetivo da metodologia ágil no desenvolvimento de software?",
+                options: [
+                    { letter: 'a', text: 'Criar documentação extensa' },
+                    { letter: 'b', text: 'Entregar valor continuamente ao cliente' },
+                    { letter: 'c', text: 'Seguir um plano rígido' },
+                    { letter: 'd', text: 'Minimizar a comunicação com o cliente' },
+                    { letter: 'e', text: 'Trabalhar isoladamente' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 3,
+                text: "O que significa a sigla SQL?",
+                options: [
+                    { letter: 'a', text: 'Simple Query Language' },
+                    { letter: 'b', text: 'Structured Query Language' },
+                    { letter: 'c', text: 'System Query Language' },
+                    { letter: 'd', text: 'Standard Query Language' },
+                    { letter: 'e', text: 'Systematic Query Language' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 4,
+                text: "Qual padrão de projeto é utilizado para garantir que uma classe tenha apenas uma instância?",
+                options: [
+                    { letter: 'a', text: 'Factory' },
+                    { letter: 'b', text: 'Singleton' },
+                    { letter: 'c', text: 'Observer' },
+                    { letter: 'd', text: 'Strategy' },
+                    { letter: 'e', text: 'Decorator' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 5,
+                text: "O que é um sistema de controle de versão?",
+                options: [
+                    { letter: 'a', text: 'Um software para criar backups' },
+                    { letter: 'b', text: 'Uma ferramenta para rastrear mudanças no código' },
+                    { letter: 'c', text: 'Um banco de dados' },
+                    { letter: 'd', text: 'Um editor de texto' },
+                    { letter: 'e', text: 'Um compilador' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 6,
+                text: "Qual das seguintes opções NÃO é um tipo de teste de software?",
+                options: [
+                    { letter: 'a', text: 'Teste unitário' },
+                    { letter: 'b', text: 'Teste de integração' },
+                    { letter: 'c', text: 'Teste de compilação' },
+                    { letter: 'd', text: 'Teste de aceitação' },
+                    { letter: 'e', text: 'Teste de regressão' }
+                ],
+                correctAnswer: 'c'
+            },
+            {
+                id: 7,
+                text: "O que é uma API (Application Programming Interface)?",
+                options: [
+                    { letter: 'a', text: 'Um tipo de banco de dados' },
+                    { letter: 'b', text: 'Uma interface para comunicação entre sistemas' },
+                    { letter: 'c', text: 'Uma linguagem de programação' },
+                    { letter: 'd', text: 'Um servidor web' },
+                    { letter: 'e', text: 'Um protocolo de rede' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 8,
+                text: "Em programação orientada a objetos, o que significa 'encapsulamento'?",
+                options: [
+                    { letter: 'a', text: 'Criar várias instâncias de uma classe' },
+                    { letter: 'b', text: 'Ocultar detalhes de implementação' },
+                    { letter: 'c', text: 'Herdar propriedades de outra classe' },
+                    { letter: 'd', text: 'Sobrescrever métodos' },
+                    { letter: 'e', text: 'Criar interfaces' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 9,
+                text: "Qual é a principal diferença entre um banco de dados relacional e não relacional?",
+                options: [
+                    { letter: 'a', text: 'A velocidade de processamento' },
+                    { letter: 'b', text: 'A estrutura e organização dos dados' },
+                    { letter: 'c', text: 'O custo de implementação' },
+                    { letter: 'd', text: 'A linguagem de programação utilizada' },
+                    { letter: 'e', text: 'O sistema operacional suportado' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 10,
+                text: "O que é um framework de desenvolvimento?",
+                options: [
+                    { letter: 'a', text: 'Um tipo de hardware' },
+                    { letter: 'b', text: 'Uma estrutura que fornece funcionalidades básicas para desenvolvimento' },
+                    { letter: 'c', text: 'Um sistema operacional' },
+                    { letter: 'd', text: 'Uma metodologia de gestão' },
+                    { letter: 'e', text: 'Um protocolo de segurança' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 11,
+                text: "Qual comando SQL é usado para recuperar dados de um banco de dados?",
+                options: [
+                    { letter: 'a', text: 'GET' },
+                    { letter: 'b', text: 'SELECT' },
+                    { letter: 'c', text: 'FETCH' },
+                    { letter: 'd', text: 'RETRIEVE' },
+                    { letter: 'e', text: 'EXTRACT' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 12,
+                text: "O que é DevOps?",
+                options: [
+                    { letter: 'a', text: 'Uma linguagem de programação' },
+                    { letter: 'b', text: 'Uma prática que integra desenvolvimento e operações' },
+                    { letter: 'c', text: 'Um tipo de banco de dados' },
+                    { letter: 'd', text: 'Um framework web' },
+                    { letter: 'e', text: 'Um sistema de versionamento' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 13,
+                text: "Qual é a função principal de um compilador?",
+                options: [
+                    { letter: 'a', text: 'Executar programas' },
+                    { letter: 'b', text: 'Traduzir código-fonte em código de máquina' },
+                    { letter: 'c', text: 'Depurar código' },
+                    { letter: 'd', text: 'Gerenciar memória' },
+                    { letter: 'e', text: 'Criar interfaces gráficas' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 14,
+                text: "O que são requisitos funcionais em um projeto de software?",
+                options: [
+                    { letter: 'a', text: 'Características de desempenho do sistema' },
+                    { letter: 'b', text: 'Funcionalidades que o sistema deve executar' },
+                    { letter: 'c', text: 'Restrições de tecnologia' },
+                    { letter: 'd', text: 'Custos do projeto' },
+                    { letter: 'e', text: 'Prazos de entrega' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 15,
+                text: "Qual metodologia ágil utiliza sprints de desenvolvimento?",
+                options: [
+                    { letter: 'a', text: 'Waterfall' },
+                    { letter: 'b', text: 'Scrum' },
+                    { letter: 'c', text: 'V-Model' },
+                    { letter: 'd', text: 'Spiral' },
+                    { letter: 'e', text: 'RAD' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 16,
+                text: "O que é refatoração de código?",
+                options: [
+                    { letter: 'a', text: 'Adicionar novas funcionalidades' },
+                    { letter: 'b', text: 'Melhorar a estrutura do código sem alterar seu comportamento' },
+                    { letter: 'c', text: 'Remover bugs' },
+                    { letter: 'd', text: 'Otimizar performance' },
+                    { letter: 'e', text: 'Documentar o código' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 17,
+                text: "Qual é o propósito de um diagrama de casos de uso?",
+                options: [
+                    { letter: 'a', text: 'Mostrar a arquitetura do sistema' },
+                    { letter: 'b', text: 'Representar as interações entre usuários e sistema' },
+                    { letter: 'c', text: 'Definir o fluxo de dados' },
+                    { letter: 'd', text: 'Modelar o banco de dados' },
+                    { letter: 'e', text: 'Especificar requisitos não funcionais' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 18,
+                text: "O que é um webhook?",
+                options: [
+                    { letter: 'a', text: 'Um tipo de malware' },
+                    { letter: 'b', text: 'Um método para receber notificações HTTP em tempo real' },
+                    { letter: 'c', text: 'Uma ferramenta de versionamento' },
+                    { letter: 'd', text: 'Um protocolo de segurança' },
+                    { letter: 'e', text: 'Um framework JavaScript' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 19,
+                text: "Qual é a diferença entre GET e POST em HTTP?",
+                options: [
+                    { letter: 'a', text: 'GET é mais rápido que POST' },
+                    { letter: 'b', text: 'GET envia dados na URL, POST envia no corpo da requisição' },
+                    { letter: 'c', text: 'POST é mais seguro que GET sempre' },
+                    { letter: 'd', text: 'GET só funciona com HTTPS' },
+                    { letter: 'e', text: 'Não há diferença' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 20,
+                text: "O que é CI/CD?",
+                options: [
+                    { letter: 'a', text: 'Um banco de dados distribuído' },
+                    { letter: 'b', text: 'Integração Contínua e Entrega Contínua' },
+                    { letter: 'c', text: 'Um protocolo de comunicação' },
+                    { letter: 'd', text: 'Uma linguagem de programação' },
+                    { letter: 'e', text: 'Um sistema operacional' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 21,
+                text: "Qual é a finalidade de um índice em um banco de dados?",
+                options: [
+                    { letter: 'a', text: 'Armazenar backups' },
+                    { letter: 'b', text: 'Acelerar consultas de dados' },
+                    { letter: 'c', text: 'Criptografar informações' },
+                    { letter: 'd', text: 'Validar dados' },
+                    { letter: 'e', text: 'Gerenciar permissões' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 22,
+                text: "O que são microserviços?",
+                options: [
+                    { letter: 'a', text: 'Serviços web muito pequenos' },
+                    { letter: 'b', text: 'Arquitetura onde aplicações são divididas em serviços independentes' },
+                    { letter: 'c', text: 'APIs gratuitas' },
+                    { letter: 'd', text: 'Componentes de hardware' },
+                    { letter: 'e', text: 'Funções JavaScript' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 23,
+                text: "Qual é a principal vantagem do uso de containers (como Docker)?",
+                options: [
+                    { letter: 'a', text: 'Maior velocidade de processamento' },
+                    { letter: 'b', text: 'Portabilidade e consistência entre ambientes' },
+                    { letter: 'c', text: 'Menor custo de hardware' },
+                    { letter: 'd', text: 'Melhor interface gráfica' },
+                    { letter: 'e', text: 'Maior segurança automática' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 24,
+                text: "O que é autenticação de dois fatores (2FA)?",
+                options: [
+                    { letter: 'a', text: 'Usar duas senhas diferentes' },
+                    { letter: 'b', text: 'Verificação de identidade usando dois métodos diferentes' },
+                    { letter: 'c', text: 'Ter duas contas' },
+                    { letter: 'd', text: 'Usar dois navegadores' },
+                    { letter: 'e', text: 'Login em dois dispositivos' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 25,
+                text: "O que é um pull request no Git?",
+                options: [
+                    { letter: 'a', text: 'Baixar código do repositório' },
+                    { letter: 'b', text: 'Solicitar que mudanças sejam incorporadas ao repositório' },
+                    { letter: 'c', text: 'Criar um novo branch' },
+                    { letter: 'd', text: 'Fazer commit das alterações' },
+                    { letter: 'e', text: 'Clonar um repositório' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 26,
+                text: "Qual é o propósito do padrão MVC (Model-View-Controller)?",
+                options: [
+                    { letter: 'a', text: 'Acelerar o processamento' },
+                    { letter: 'b', text: 'Separar a lógica de negócio, apresentação e controle' },
+                    { letter: 'c', text: 'Comprimir dados' },
+                    { letter: 'd', text: 'Gerenciar memória' },
+                    { letter: 'e', text: 'Validar formulários' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 27,
+                text: "O que é SQL Injection?",
+                options: [
+                    { letter: 'a', text: 'Um método de otimização de queries' },
+                    { letter: 'b', text: 'Uma vulnerabilidade de segurança que permite executar código SQL malicioso' },
+                    { letter: 'c', text: 'Uma técnica de backup' },
+                    { letter: 'd', text: 'Um tipo de índice' },
+                    { letter: 'e', text: 'Uma ferramenta de debugging' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 28,
+                text: "O que significa REST em uma API RESTful?",
+                options: [
+                    { letter: 'a', text: 'Reliable Execution Service Technology' },
+                    { letter: 'b', text: 'Representational State Transfer' },
+                    { letter: 'c', text: 'Remote Execution System Transfer' },
+                    { letter: 'd', text: 'Rapid Service Technology' },
+                    { letter: 'e', text: 'Resource Execution State Transfer' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 29,
+                text: "Qual é a diferença entre uma função síncrona e assíncrona?",
+                options: [
+                    { letter: 'a', text: 'Funções síncronas são mais rápidas' },
+                    { letter: 'b', text: 'Funções assíncronas não bloqueiam a execução do código' },
+                    { letter: 'c', text: 'Funções síncronas usam menos memória' },
+                    { letter: 'd', text: 'Não há diferença prática' },
+                    { letter: 'e', text: 'Funções assíncronas só funcionam em JavaScript' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 30,
+                text: "O que é um ORM (Object-Relational Mapping)?",
+                options: [
+                    { letter: 'a', text: 'Um tipo de banco de dados' },
+                    { letter: 'b', text: 'Uma técnica para mapear objetos a tabelas de banco de dados' },
+                    { letter: 'c', text: 'Um protocolo de rede' },
+                    { letter: 'd', text: 'Uma linguagem de programação' },
+                    { letter: 'e', text: 'Um sistema operacional' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 31,
+                text: "O que é load balancing?",
+                options: [
+                    { letter: 'a', text: 'Compressão de dados' },
+                    { letter: 'b', text: 'Distribuição de carga entre múltiplos servidores' },
+                    { letter: 'c', text: 'Otimização de código' },
+                    { letter: 'd', text: 'Limpeza de cache' },
+                    { letter: 'e', text: 'Backup de dados' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 32,
+                text: "Qual é a função de um firewall?",
+                options: [
+                    { letter: 'a', text: 'Acelerar a rede' },
+                    { letter: 'b', text: 'Proteger a rede filtrando tráfego não autorizado' },
+                    { letter: 'c', text: 'Armazenar dados' },
+                    { letter: 'd', text: 'Compilar código' },
+                    { letter: 'e', text: 'Gerenciar bancos de dados' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 33,
+                text: "O que é cache em desenvolvimento web?",
+                options: [
+                    { letter: 'a', text: 'Um tipo de banco de dados' },
+                    { letter: 'b', text: 'Armazenamento temporário de dados para acesso rápido' },
+                    { letter: 'c', text: 'Uma linguagem de programação' },
+                    { letter: 'd', text: 'Um protocolo de segurança' },
+                    { letter: 'e', text: 'Um framework' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 34,
+                text: "O que são cookies em navegadores web?",
+                options: [
+                    { letter: 'a', text: 'Programas maliciosos' },
+                    { letter: 'b', text: 'Pequenos arquivos de dados armazenados pelo navegador' },
+                    { letter: 'c', text: 'Extensões do navegador' },
+                    { letter: 'd', text: 'Tipos de vírus' },
+                    { letter: 'e', text: 'Protocolos de rede' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 35,
+                text: "O que é a metodologia Kanban?",
+                options: [
+                    { letter: 'a', text: 'Uma linguagem de programação' },
+                    { letter: 'b', text: 'Um sistema visual de gestão de trabalho e fluxo' },
+                    { letter: 'c', text: 'Um tipo de banco de dados' },
+                    { letter: 'd', text: 'Uma ferramenta de versionamento' },
+                    { letter: 'e', text: 'Um framework web' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 36,
+                text: "O que é um endpoint em uma API?",
+                options: [
+                    { letter: 'a', text: 'O servidor principal' },
+                    { letter: 'b', text: 'Uma URL específica que permite acesso a um recurso' },
+                    { letter: 'c', text: 'Um tipo de banco de dados' },
+                    { letter: 'd', text: 'Uma linguagem de programação' },
+                    { letter: 'e', text: 'Um protocolo de segurança' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 37,
+                text: "O que é versionamento semântico (SemVer)?",
+                options: [
+                    { letter: 'a', text: 'Um tipo de controle de versão' },
+                    { letter: 'b', text: 'Um sistema de numeração de versões (MAJOR.MINOR.PATCH)' },
+                    { letter: 'c', text: 'Uma linguagem de marcação' },
+                    { letter: 'd', text: 'Um protocolo de rede' },
+                    { letter: 'e', text: 'Uma metodologia ágil' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 38,
+                text: "O que é umrace condition em programação?",
+                options: [
+                    { letter: 'a', text: 'Um algoritmo de ordenação rápido' },
+                    { letter: 'b', text: 'Uma condição onde o resultado depende da sequência de eventos' },
+                    { letter: 'c', text: 'Um tipo de loop' },
+                    { letter: 'd', text: 'Uma estrutura de dados' },
+                    { letter: 'e', text: 'Um padrão de projeto' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 39,
+                text: "O que é HTTPS?",
+                options: [
+                    { letter: 'a', text: 'Uma versão antiga do HTTP' },
+                    { letter: 'b', text: 'HTTP com camada de segurança (SSL/TLS)' },
+                    { letter: 'c', text: 'Um tipo de banco de dados' },
+                    { letter: 'd', text: 'Uma linguagem de programação' },
+                    { letter: 'e', text: 'Um framework web' }
+                ],
+                correctAnswer: 'b'
+            },
+            {
+                id: 40,
+                text: "O que é escalabilidade horizontal?",
+                options: [
+                    { letter: 'a', text: 'Aumentar o poder de um único servidor' },
+                    { letter: 'b', text: 'Adicionar mais servidores ao sistema' },
+                    { letter: 'c', text: 'Diminuir o número de usuários' },
+                    { letter: 'd', text: 'Otimizar o código' },
+                    { letter: 'e', text: 'Comprimir dados' }
+                ],
+                correctAnswer: 'b'
+            }
+        ];
+
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            studentData.name = document.getElementById('studentName').value;
+            
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('examScreen').classList.remove('hidden');
+            
+            document.getElementById('studentNameDisplay').textContent = studentData.name;
+            document.getElementById('studentInfo').textContent = 
+                `${studentData.name} | Estudante | SATE`;
+            
+            initExam();
+        });
+
+        // Inicializar prova
+        function initExam() {
+            createQuestionGrid();
+            loadQuestion(0);
+            startTimer();
+        }
+
+        // Timer
+        function startTimer() {
+            setInterval(() => {
+                if (timeRemaining > 0) {
+                    timeRemaining--;
+                    const hours = Math.floor(timeRemaining / 3600);
+                    const minutes = Math.floor((timeRemaining % 3600) / 60);
+                    const seconds = timeRemaining % 60;
+                    document.getElementById('timer').textContent = 
+                        `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                } else {
+                    alert('Tempo esgotado! A prova será finalizada.');
+                    finishExam();
+                }
+            }, 1000);
+        }
+
+        // Criar grid de questões
+        function createQuestionGrid() {
+            const grid = document.getElementById('questionGrid');
+            grid.innerHTML = '';
+            
+            questions.forEach((q, index) => {
+                const btn = document.createElement('div');
+                btn.className = 'question-number';
+                btn.textContent = q.id;
+                btn.onclick = () => loadQuestion(index);
+                grid.appendChild(btn);
+            });
+        }
+
+        // Carregar questão
+        function loadQuestion(index) {
+            currentQuestion = index;
+            const question = questions[index];
+            
+            document.getElementById('currentQuestionNumber').textContent = question.id;
+            document.getElementById('questionText').textContent = question.text;
+            
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach(option => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option';
+                
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = 'answer';
+                radio.value = option.letter;
+                radio.id = `option${option.letter}`;
+                
+                if (answers[question.id] === option.letter) {
+                    radio.checked = true;
+                }
+                
+                radio.addEventListener('change', () => saveAnswer(question.id, option.letter));
+                
+                const label = document.createElement('label');
+                label.htmlFor = `option${option.letter}`;
+                label.textContent = `${option.letter}) ${option.text}`;
+                
+                optionDiv.appendChild(radio);
+                optionDiv.appendChild(label);
+                optionsContainer.appendChild(optionDiv);
+            });
+            
+            updateQuestionGrid();
+            updateNavButtons();
+        }
+
+        // Salvar resposta
+        function saveAnswer(questionId, answer) {
+            answers[questionId] = answer;
+            updateSummary();
+            updateQuestionGrid();
+        }
+
+        // Atualizar resumo
+        function updateSummary() {
+            const answered = Object.keys(answers).length;
+            const blank = questions.length - answered;
+            
+            document.getElementById('answeredCount').textContent = answered;
+            document.getElementById('blankCount').textContent = blank;
+        }
+
+        // Atualizar grid de questões
+        function updateQuestionGrid() {
+            const grid = document.getElementById('questionGrid');
+            const buttons = grid.querySelectorAll('.question-number');
+            
+            buttons.forEach((btn, index) => {
+                btn.classList.remove('active', 'answered');
+                
+                if (index === currentQuestion) {
+                    btn.classList.add('active');
+                }
+                
+                if (answers[questions[index].id]) {
+                    btn.classList.add('answered');
+                }
+            });
+        }
+
+        // Atualizar botões de navegação
+        function updateNavButtons() {
+            document.getElementById('prevBtn').disabled = currentQuestion === 0;
+            document.getElementById('nextBtn').disabled = currentQuestion === questions.length - 1;
+        }
+
+        // Navegação
+        function previousQuestion() {
+            if (currentQuestion > 0) {
+                loadQuestion(currentQuestion - 1);
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestion < questions.length - 1) {
+                loadQuestion(currentQuestion + 1);
+            }
+        }
+
+        // Finalizar prova
+        function finishExam() {
+            if (!confirm('Tem certeza que deseja finalizar a prova?')) {
+                return;
+            }
+            
+            let score = 0;
+            const resultsDetails = document.getElementById('resultsDetails');
+            resultsDetails.innerHTML = '';
+            
+            questions.forEach(question => {
+                const userAnswer = answers[question.id];
+                const isCorrect = userAnswer === question.correctAnswer;
+                
+                if (isCorrect) score++;
+                
+                const resultItem = document.createElement('div');
+                resultItem.className = 'result-item';
+                resultItem.innerHTML = `
+                    <span>Questão ${question.id}</span>
+                    <span class="${isCorrect ? 'correct' : 'incorrect'}">
+                        ${isCorrect ? '✓ Correta' : '✗ Incorreta'}
+                    </span>
+                `;
+                resultsDetails.appendChild(resultItem);
+            });
+            
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('totalQuestions').textContent = questions.length;
+            document.getElementById('finalStudentName').textContent = studentData.name;
+            
+            document.getElementById('examScreen').classList.add('hidden');
+            document.getElementById('resultsScreen').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
