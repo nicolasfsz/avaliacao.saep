@@ -32,27 +32,27 @@
         
         <div class="top-bar">
             <div class="logo">
-                                <img src="https://yt3.googleusercontent.com/ytc/AIdro_kmh6DS831WIyiTmCHlskXhI6jiw_KzMke4WIzVjEoOPQ=s900-c-k-c0x00ffffff-no-rj" alt="Cebraspe" class="logo-cebraspe">
-
+                <img src="https://yt3.googleusercontent.com/ytc/AIdro_kmh6DS831WIyiTmCHlskXhI6jiw_KzMke4WIzVjEoOPQ=s900-c-k-c0x00ffffff-no-rj" alt="Cebraspe" class="logo-cebraspe">
                 <span class="logo-text">Cebraspe</span>
             </div>
-            <div style="text-align: right;">
-                <div style="color: #3b5998; font-weight: bold; font-size: 12px;">
-                    <span id="studentNameDisplay"></span>
-                </div>
+            
+            <div class="title-section-header">
+                <h1>Avaliação de Desempenho de Estudante 2026 - 2ª Etapa</h1>
+                <p id="studentInfo"></p>
             </div>
-        </div>
-
-        <div class="title-section">
-            <h1>Avaliação de Desempenho de Estudante 2026 - 2ª Etapa</h1>
-            <p id="studentInfo"></p>
+            
+            <div class="senai-logo-container">
+                <img src="https://logodownload.org/wp-content/uploads/2019/08/senai-logo-1.png" alt="SENAI" class="logo-senai" id="senaiLogo">
+            </div>
         </div>
 
         <div class="subject-bar">Desenvolvimento de Sistemas</div>
 
         <div class="main-content">
             <div class="sidebar">
-                <div class="timer">Tempo: <span id="timer">2:00:00</span></div>
+                <div class="sidebar-header">Restam: <span id="timer">2:00:00</span></div>
+                
+                <div class="summary-header">RESUMO DA PROVA</div>
                 
                 <div class="summary">
                     <div class="summary-item">
@@ -78,6 +78,8 @@
                 
                 <div class="options" id="optionsContainer"></div>
 
+                <button class="clear-answer-btn" id="clearAnswerBtn" onclick="clearAnswer()">Apagar resposta</button>
+
                 <div class="navigation-buttons">
                     <button class="nav-btn" id="prevBtn" onclick="previousQuestion()">◀ Anterior</button>
                     <button class="nav-btn" id="nextBtn" onclick="nextQuestion()">Próxima ▶</button>
@@ -89,15 +91,56 @@
 
     <!-- Results Screen -->
     <div id="resultsScreen" class="hidden results-screen">
-        <h2>Avaliação Finalizada!</h2>
-        <div class="score">
-            <span id="finalScore">0</span> / <span id="totalQuestions">40</span>
+        <div class="results-header">
+            <div class="results-logo-container">
+                <img src="https://yt3.googleusercontent.com/ytc/AIdro_kmh6DS831WIyiTmCHlskXhI6jiw_KzMke4WIzVjEoOPQ=s900-c-k-c0x00ffffff-no-rj" alt="Cebraspe" class="logo-cebraspe-results">
+                <span class="logo-text-results">Cebraspe</span>
+            </div>
+            <img src="https://logodownload.org/wp-content/uploads/2019/08/senai-logo-1.png" alt="SENAI" class="logo-senai-results">
         </div>
-        <p style="text-align: center; color: #666; margin-bottom: 30px;">
-            Parabéns, <strong id="finalStudentName"></strong>!<br>
-            Você completou a avaliação.
-        </p>
-        <div class="results-details" id="resultsDetails"></div>
+        
+        <div class="results-title-bar">
+            <h1>Avaliação de Desempenho de Estudante 2026 - 2ª Etapa</h1>
+        </div>
+        
+        <div class="results-content">
+            <div class="results-congratulations">
+                <div class="congrats-icon">✓</div>
+                <h2>Avaliação Finalizada!</h2>
+                <p>Parabéns, <strong id="finalStudentName"></strong>!</p>
+            </div>
+            
+            <div class="score-card">
+                <div class="score-label">Sua Pontuação</div>
+                <div class="score">
+                    <span id="finalScore">0</span> / <span id="totalQuestions">40</span>
+                </div>
+                <div class="score-percentage" id="scorePercentage">0%</div>
+            </div>
+            
+            <div class="results-summary-cards">
+                <div class="summary-card correct-card">
+                    <div class="card-icon">✓</div>
+                    <div class="card-number" id="correctCount">0</div>
+                    <div class="card-label">Respostas Corretas</div>
+                </div>
+                <div class="summary-card incorrect-card">
+                    <div class="card-icon">✗</div>
+                    <div class="card-number" id="incorrectCount">0</div>
+                    <div class="card-label">Respostas Incorretas</div>
+                </div>
+                <div class="summary-card blank-card">
+                    <div class="card-icon">−</div>
+                    <div class="card-number" id="blankResultCount">0</div>
+                    <div class="card-label">Questões em Branco</div>
+                </div>
+            </div>
+            
+            <div class="results-details-section">
+                <h3>Detalhamento por Questão</h3>
+                <div class="results-details" id="resultsDetails"></div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -602,7 +645,6 @@
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('examScreen').classList.remove('hidden');
             
-            document.getElementById('studentNameDisplay').textContent = studentData.name;
             document.getElementById('studentInfo').textContent = 
                 `${studentData.name} | Estudante | SATE`;
             
@@ -625,7 +667,7 @@
                     const minutes = Math.floor((timeRemaining % 3600) / 60);
                     const seconds = timeRemaining % 60;
                     document.getElementById('timer').textContent = 
-                        `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                        `${hours} h ${minutes.toString().padStart(2, '0')} min`;
                 } else {
                     alert('Tempo esgotado! A prova será finalizada.');
                     finishExam();
@@ -676,7 +718,8 @@
                 
                 const label = document.createElement('label');
                 label.htmlFor = `option${option.letter}`;
-                label.textContent = `${option.letter}) ${option.text}`;
+                label.className = 'option-label';
+                label.innerHTML = `<span class="option-letter">${option.letter}</span> ${option.text}`;
                 
                 optionDiv.appendChild(radio);
                 optionDiv.appendChild(label);
@@ -690,6 +733,19 @@
         // Salvar resposta
         function saveAnswer(questionId, answer) {
             answers[questionId] = answer;
+            updateSummary();
+            updateQuestionGrid();
+        }
+
+        // Apagar resposta
+        function clearAnswer() {
+            const question = questions[currentQuestion];
+            delete answers[question.id];
+            
+            // Desmarcar radio buttons
+            const radios = document.getElementsByName('answer');
+            radios.forEach(radio => radio.checked = false);
+            
             updateSummary();
             updateQuestionGrid();
         }
@@ -747,28 +803,59 @@
             }
             
             let score = 0;
+            let incorrect = 0;
+            let blank = 0;
             const resultsDetails = document.getElementById('resultsDetails');
             resultsDetails.innerHTML = '';
             
             questions.forEach(question => {
                 const userAnswer = answers[question.id];
                 const isCorrect = userAnswer === question.correctAnswer;
+                const isBlank = !userAnswer;
                 
-                if (isCorrect) score++;
+                if (isCorrect) {
+                    score++;
+                } else if (isBlank) {
+                    blank++;
+                } else {
+                    incorrect++;
+                }
                 
                 const resultItem = document.createElement('div');
                 resultItem.className = 'result-item';
+                
+                let statusClass = 'result-blank';
+                let statusIcon = '−';
+                let statusText = 'Em Branco';
+                
+                if (isCorrect) {
+                    statusClass = 'result-correct';
+                    statusIcon = '✓';
+                    statusText = 'Correta';
+                } else if (!isBlank) {
+                    statusClass = 'result-incorrect';
+                    statusIcon = '✗';
+                    statusText = 'Incorreta';
+                }
+                
                 resultItem.innerHTML = `
-                    <span>Questão ${question.id}</span>
-                    <span class="${isCorrect ? 'correct' : 'incorrect'}">
-                        ${isCorrect ? '✓ Correta' : '✗ Incorreta'}
+                    <span class="result-question-number">Questão ${question.id}</span>
+                    <span class="result-status ${statusClass}">
+                        <span class="status-icon">${statusIcon}</span>
+                        ${statusText}
                     </span>
                 `;
                 resultsDetails.appendChild(resultItem);
             });
             
+            const percentage = Math.round((score / questions.length) * 100);
+            
             document.getElementById('finalScore').textContent = score;
             document.getElementById('totalQuestions').textContent = questions.length;
+            document.getElementById('scorePercentage').textContent = percentage + '%';
+            document.getElementById('correctCount').textContent = score;
+            document.getElementById('incorrectCount').textContent = incorrect;
+            document.getElementById('blankResultCount').textContent = blank;
             document.getElementById('finalStudentName').textContent = studentData.name;
             
             document.getElementById('examScreen').classList.add('hidden');
